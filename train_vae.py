@@ -17,9 +17,9 @@ from data.font_dataset import FontDataset
 from mnist.vae import VAE
 
 
-def make_grid(tensor, number, size):
-    tensor = t.transpose(tensor, 0, 1).contiguous().view(1, number, number * size, size)
-    tensor = t.transpose(tensor, 1, 2).contiguous().view(1, number * size, number * size)
+def make_grid(tensor, number1, number2, size):
+    tensor = t.transpose(tensor, 0, 1).contiguous().view(1, number1, number2 * size, size)
+    tensor = t.transpose(tensor, 1, 2).contiguous().view(1, number1 * size, number2 * size)
 
     return tensor
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     likelihood_function = nn.BCEWithLogitsLoss(size_average=False)
 
-    z = [Variable(t.randn(256, size)) for size in vae.latent_size]
+    z = [Variable(t.randn(args.batch_size, size)) for size in vae.latent_size]
     if args.use_cuda:
         z = [var.cuda() for var in z]
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
             out, kld = vae(input, char_vec, font_vec, transform_vec)
 
-            input = input.view(-1, 1, 28, 28)
+            target = target.view(-1, 1, 28, 28)
             out = out.contiguous().view(-1, 1, 28, 28)
 
             likelihood = likelihood_function(out, target) / args.batch_size
@@ -104,11 +104,11 @@ if __name__ == "__main__":
             optimizer.step()
 
             if iteration % 10 == 0:
-                print('epoch {}, iteration {}, loss {}'.format(epoch, iteration, loss.cpu().data.numpy()[0]))
+                print('epoch {}, iteration {}, loss {}'.format(epoch, iteration, loss.cpu().data.numpy().item()))
 
                 sampling = vae.sample(z, char_vec, font_vec, transform_vec).view(-1, 1, 28, 28)
 
-                grid = make_grid(F.sigmoid(sampling).cpu().data, 16, 28)
+                grid = make_grid(F.sigmoid(sampling).cpu().data, 5, 8, 28)
                 vutils.save_image(grid, 'prior_sampling/vae_{}.png'.format(epoch * len(dataloader) + iteration))
 
     samplings = [f for f in listdir('prior_sampling')]

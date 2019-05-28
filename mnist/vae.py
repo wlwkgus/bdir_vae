@@ -95,7 +95,7 @@ class VAE(nn.Module):
 
         [batch_size, _] = input.size()
 
-        cuda = input.is_cuda
+        cuda = True 
 
         posterior_parameters = []
 
@@ -158,7 +158,7 @@ class VAE(nn.Module):
             if cuda:
                 eps.cuda()
 
-            posterior_gauss = eps * posterior_std + posterior_mu
+            posterior_gauss = eps.cuda() * posterior_std + posterior_mu
             posterior, log_det = self.iaf[i](posterior_gauss, h)
 
             '''
@@ -206,7 +206,7 @@ class VAE(nn.Module):
 
         top_variable = z[-1]
 
-        out = self.generation[-1].out(top_variable, char_vec, font_vec, transform_vec)
+        out = self.generation[-1].out(top_variable)
 
         for i in range(self.vae_length - 2, -1, -1):
             determenistic = self.generation[i].input(out)
@@ -223,8 +223,8 @@ class VAE(nn.Module):
         log_p_z_x = VAE.log_gauss(kwargs['z_gauss'], kwargs['posterior']) - kwargs['log_det']
 
         if kwargs.get('prior') is None:
-            kwargs['prior'] = [Variable(t.zeros(*kwargs['z'].size())),
-                               Variable(t.ones(*kwargs['z'].size()))]
+            kwargs['prior'] = [Variable(t.zeros(*kwargs['z'].size())).cuda(),
+                               Variable(t.ones(*kwargs['z'].size())).cuda()]
 
         one = Variable(t.FloatTensor([1]))
 
@@ -235,7 +235,7 @@ class VAE(nn.Module):
         log_p_z = VAE.log_gauss(kwargs['z'], kwargs['prior'])
 
         result = log_p_z_x - log_p_z
-        return t.max(t.stack([result.mean(), one]), 0)[0]
+        return t.max(t.stack([result.mean(), one[0]]), 0)[0]
 
     @staticmethod
     def log_gauss(z, params):

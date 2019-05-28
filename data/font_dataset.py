@@ -161,7 +161,7 @@ class FontDataset(Dataset):
         self.train = train
         self.dataset_path = dataset_path
         self.test_count = 5
-        self.train_count = 500
+        self.train_count = 5
         self.train_data = list()
         self.test_data = list()
 
@@ -264,7 +264,7 @@ class FontDataset(Dataset):
                 sample['data'] = np.clip(sample['data'], 0, 255)
             sample.pop('image_path')
             sample.pop('base_image_path')
-            print(sample)
+            # print(sample)
             return sample
         else:
             sample = self.test_data[idx].copy()
