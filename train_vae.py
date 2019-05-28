@@ -6,12 +6,14 @@ import imageio
 import torch as t
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
 from torch.optim import Adam
 from torchvision import datasets
+from torchvision import transforms
+from torch.utils.data import DataLoader
 
+from data.font_dataset import FontDataset
 from mnist.vae import VAE
 
 
@@ -28,11 +30,11 @@ if __name__ == "__main__":
         os.mkdir('prior_sampling')
 
     parser = argparse.ArgumentParser(description='CDVAE')
-    parser.add_argument('--num-epochs', type=int, default=4, metavar='NI',
+    parser.add_argument('--num-epochs', type=int, default=2000, metavar='NI',
                         help='num epochs (default: 4)')
     parser.add_argument('--batch-size', type=int, default=40, metavar='BS',
                         help='batch size (default: 40)')
-    parser.add_argument('--use-cuda', type=bool, default=False, metavar='CUDA',
+    parser.add_argument('--use-cuda', type=bool, default=True, metavar='CUDA',
                         help='use cuda (default: False)')
     parser.add_argument('--learning-rate', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
@@ -40,12 +42,24 @@ if __name__ == "__main__":
                         help='path where save trained model to (default: "trained_model")')
     args = parser.parse_args()
 
-    dataset = datasets.MNIST(root='data/',
-                             transform=transforms.Compose([
-                                 transforms.ToTensor()]),
-                             download=True,
-                             train=True)
-    dataloader = t.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+    # dataset = datasets.MNIST(root='data/',
+    #                          transform=transforms.Compose([
+    #                              transforms.ToTensor()]),
+    #                          download=True,
+    #                          train=True)
+    # dataloader = t.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+
+    # transform = transforms.ToTensor()
+    print("Generating dataset...")
+    data_set = FontDataset('/home/tony/work/font_transform/new_data/data/', train=True)
+    dataloader = DataLoader(
+        dataset=data_set,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=4,
+        drop_last=False,
+    )
+    print('Generating dataset done.')
 
     vae = VAE()
     if args.use_cuda:
@@ -60,11 +74,20 @@ if __name__ == "__main__":
         z = [var.cuda() for var in z]
 
     for epoch in range(args.num_epochs):
-        for iteration, (input, _) in enumerate(dataloader):
+        for iteration, (batch_data) in enumerate(dataloader):
 
-            input = Variable(input).view(-1, 784)
+            input = batch_data['base_data'].view(-1, 784) / 255.
+            target = batch_data['data'].view(-1, 784) / 255.
+            font_vec = batch_data['font']
+            char_vec = batch_data['char']
+            transform_vec = batch_data['transform']
+            # input = Variable(input).view(-1, 784)
             if args.use_cuda:
                 input = input.cuda()
+                target = target.cuda()
+                font_vec = font_vec.cuda()
+                char_vec = char_vec.cuda()
+                transform_vec = transform_vec.cuda()
 
             optimizer.zero_grad()
 
@@ -73,7 +96,7 @@ if __name__ == "__main__":
             input = input.view(-1, 1, 28, 28)
             out = out.contiguous().view(-1, 1, 28, 28)
 
-            likelihood = likelihood_function(out, input) / args.batch_size
+            likelihood = likelihood_function(out, target) / args.batch_size
             print(likelihood, kld)
             loss = likelihood + kld
 

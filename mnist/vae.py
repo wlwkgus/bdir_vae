@@ -12,7 +12,10 @@ from mnist.parameters_inference import ParametersInference
 
 
 class VAE(nn.Module):
-    def __init__(self):
+    def __init__(self, char_vec_size=129, font_vec_size=7, transform_vec_size=6):
+        self.char_vec_size = char_vec_size
+        self.font_vec_size = font_vec_size
+        self.transform_vec_size = transform_vec_size
         super(VAE, self).__init__()
 
         self.inference = nn.ModuleList(
@@ -57,7 +60,7 @@ class VAE(nn.Module):
                     ),
                     prior=ParametersInference(100, latent_size=100),
                     out=GenerativeOut(nn.Sequential(
-                        nn.utils.weight_norm(nn.Linear(100 + 100, 300)),
+                        nn.utils.weight_norm(nn.Linear(100 + 100 + self.font_vec_size + self.char_vec_size + self.transform_vec_size, 300)),
                         nn.SELU(),
                         nn.utils.weight_norm(nn.Linear(300, 400)),
                         nn.SELU(),
@@ -83,7 +86,7 @@ class VAE(nn.Module):
         assert len(self.inference) == len(self.generation) == len(self.iaf)
         self.vae_length = len(self.inference)
 
-    def forward(self, input):
+    def forward(self, input, char_vec, font_vec, transform_vec):
         """
         :param input: An float tensor with shape of [batch_size, 784]
         :return: An float tensor with shape of [batch_size, 784]
@@ -170,7 +173,14 @@ class VAE(nn.Module):
                                               posterior=[posterior_mu, posterior_std],
                                               prior=[prior_mu, prior_std])
 
-            posterior = self.generation[i].out(posterior, posterior_determenistic)
+            # TODO : here
+            posterior = self.generation[i].out(
+                posterior,
+                posterior_determenistic,
+                font_vec,
+                char_vec,
+                transform_vec
+            )
 
             if i != 0:
                 '''
@@ -188,7 +198,7 @@ class VAE(nn.Module):
 
         return posterior, kld
 
-    def sample(self, z):
+    def sample(self, z, font_vec, char_vec, transform_vec):
         """
         :param z: An array of variables from normal distribution each with shape of [batch_size, latent_size[i]]
         :return: Sample from generative model with shape of [batch_size, 784]
@@ -196,14 +206,14 @@ class VAE(nn.Module):
 
         top_variable = z[-1]
 
-        out = self.generation[-1].out(top_variable)
+        out = self.generation[-1].out(top_variable, font_vec, char_vec, transform_vec)
 
         for i in range(self.vae_length - 2, -1, -1):
             determenistic = self.generation[i].input(out)
 
             [mu, std, _] = self.generation[i].prior(determenistic)
             prior = z[i] * std + mu
-            out = self.generation[i].out(prior, determenistic)
+            out = self.generation[i].out(prior, determenistic, font_vec, char_vec, transform_vec)
 
         return out
 
