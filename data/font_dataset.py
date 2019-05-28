@@ -142,6 +142,7 @@ chars = ['0x21',
 from torch.utils.data import Dataset
 from PIL import Image
 from os import listdir
+from tqdm import tqdm
 import os
 import random
 import json
