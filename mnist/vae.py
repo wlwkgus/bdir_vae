@@ -198,7 +198,7 @@ class VAE(nn.Module):
 
         return posterior, kld
 
-    def sample(self, z, font_vec, char_vec, transform_vec):
+    def sample(self, z, char_vec, font_vec, transform_vec):
         """
         :param z: An array of variables from normal distribution each with shape of [batch_size, latent_size[i]]
         :return: Sample from generative model with shape of [batch_size, 784]
@@ -206,14 +206,14 @@ class VAE(nn.Module):
 
         top_variable = z[-1]
 
-        out = self.generation[-1].out(top_variable, font_vec, char_vec, transform_vec)
+        out = self.generation[-1].out(top_variable, char_vec, font_vec, transform_vec)
 
         for i in range(self.vae_length - 2, -1, -1):
             determenistic = self.generation[i].input(out)
 
             [mu, std, _] = self.generation[i].prior(determenistic)
             prior = z[i] * std + mu
-            out = self.generation[i].out(prior, determenistic, font_vec, char_vec, transform_vec)
+            out = self.generation[i].out(prior, determenistic, char_vec, font_vec, transform_vec)
 
         return out
 

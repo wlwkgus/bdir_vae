@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
             optimizer.zero_grad()
 
-            out, kld = vae(input)
+            out, kld = vae(input, char_vec, font_vec, transform_vec)
 
             input = input.view(-1, 1, 28, 28)
             out = out.contiguous().view(-1, 1, 28, 28)
@@ -106,7 +106,7 @@ if __name__ == "__main__":
             if iteration % 10 == 0:
                 print('epoch {}, iteration {}, loss {}'.format(epoch, iteration, loss.cpu().data.numpy()[0]))
 
-                sampling = vae.sample(z).view(-1, 1, 28, 28)
+                sampling = vae.sample(z, char_vec, font_vec, transform_vec).view(-1, 1, 28, 28)
 
                 grid = make_grid(F.sigmoid(sampling).cpu().data, 16, 28)
                 vutils.save_image(grid, 'prior_sampling/vae_{}.png'.format(epoch * len(dataloader) + iteration))

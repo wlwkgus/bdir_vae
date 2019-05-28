@@ -8,7 +8,7 @@ class GenerativeOut(nn.Module):
 
         self.fc = fc
 
-    def forward(self, latent_input, determenistic_input, font_vec, char_vec, transform_vec):
-        input = t.cat([latent_input, determenistic_input, font_vec, char_vec, transform_vec], 1)
+    def forward(self, latent_input, determenistic_input, char_vec, font_vec, transform_vec):
+        input = t.cat([latent_input, determenistic_input, char_vec, font_vec, transform_vec], 1)
 
         return self.fc(input)
