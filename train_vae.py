@@ -97,18 +97,18 @@ if __name__ == "__main__":
             out = out.contiguous().view(-1, 1, 28, 28)
 
             likelihood = likelihood_function(out, target) / args.batch_size
-            print(likelihood, kld)
+            # print(likelihood, kld)
             loss = likelihood + kld
 
             loss.backward()
             optimizer.step()
 
-            if iteration % 10 == 0:
+            if iteration  == 0:
                 print('epoch {}, iteration {}, loss {}'.format(epoch, iteration, loss.cpu().data.numpy().item()))
 
                 sampling = vae.sample(z, char_vec, font_vec, transform_vec).view(-1, 1, 28, 28)
 
-                grid = make_grid(F.sigmoid(sampling).cpu().data, 5, 8, 28)
+                grid = make_grid(F.sigmoid(sampling).cpu().data, 60, 60, 28)
                 vutils.save_image(grid, 'prior_sampling/vae_{}.png'.format(epoch * len(dataloader) + iteration))
 
     samplings = [f for f in listdir('prior_sampling')]

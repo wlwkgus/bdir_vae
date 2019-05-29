@@ -4,9 +4,6 @@ from torch import nn
 import matplotlib.pyplot as plt
 
 from PIL import Image
-im = Image.open('/home/tony/work/font_transform/data/NanumMyongjo/f.png')
-plt.imshow(np.asarray(im)[..., 3] > 110, cmap='gray')
-d = np.asarray(im.getdata(), dtype=np.float32)[:, 3]
 
 chars = ['0x21',
 '0x2b',
@@ -161,7 +158,7 @@ class FontDataset(Dataset):
         self.train = train
         self.dataset_path = dataset_path
         self.test_count = 5
-        self.train_count = 5
+        self.train_count = 500
         self.train_data = list()
         self.test_data = list()
 
@@ -200,6 +197,7 @@ class FontDataset(Dataset):
                         os.path.join(self.dataset_path, self.transform_path, '{}.json'.format(number)))
                     d['image_path'] = os.path.join(self.dataset_path, font, char, image_path)
                     d['base_image_path'] = os.path.join(base_im_path, random.choice(listdir(base_im_path)))
+                    # print(d['image_path'])
                     self.train_data.append(d)
 
                 for image_path in image_paths[-self.test_count:]:
@@ -274,3 +272,9 @@ class FontDataset(Dataset):
             sample.pop('image_path')
             sample.pop('base_image_path')
             return sample
+
+if __name__ == '__main__':
+    data_set = FontDataset('/home/tony/work/font_transform/new_data/data/', train=True)
+    print('Start iterating')
+    for data in data_set:
+        pass
