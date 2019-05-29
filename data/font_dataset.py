@@ -252,9 +252,10 @@ class FontDataset(Dataset):
     def __getitem__(self, idx):
         if self.train:
             sample = self.train_data[idx].copy()
-            sample['data'] = np.reshape(np.asarray(Image.open(sample['image_path']))[..., 3], (-1,)).astype(np.float32)
-            sample['base_data'] = np.reshape(np.asarray(Image.open(sample['base_image_path']))[..., 3], (-1,)).astype(
-                np.float32)
+            im = np.asarray(Image.open(sample['image_path']))
+            base_im = np.asarray(Image.open(sample['base_image_path']))
+            sample['data'] = np.reshape(im[..., 3], (-1,)).astype(np.float32)
+            sample['base_data'] = np.reshape(base_im[..., 3], (-1,)).astype(np.float32)
             if np.random.random() > 0.5:
                 sample['data'] = (sample['data'] > np.random.randint(100, 130)).astype(np.float32) * 255
             if np.random.random() > 0.5:
@@ -262,16 +263,22 @@ class FontDataset(Dataset):
                 sample['data'] = np.clip(sample['data'], 0, 255)
             sample.pop('image_path')
             sample.pop('base_image_path')
+            im.close()
+            base_im.close()
             # print(sample)
             return sample
         else:
             sample = self.test_data[idx].copy()
-            sample['data'] = np.reshape(np.asarray(Image.open(sample['image_path']))[..., 3], (-1,)).astype(np.float32)
-            sample['base_data'] = np.reshape(np.asarray(Image.open(sample['base_image_path']), [..., 3]), (-1,)).astype(
-                np.float32)
+            im = np.asarray(Image.open(sample['image_path']))
+            base_im = np.asarray(Image.open(sample['base_image_path']))
+            sample['data'] = np.reshape(im[..., 3], (-1,)).astype(np.float32)
+            sample['base_data'] = np.reshape(base_im[..., 3], (-1,)).astype(np.float32)
             sample.pop('image_path')
             sample.pop('base_image_path')
+            im.close()
+            base_im.close()
             return sample
+
 
 if __name__ == '__main__':
     data_set = FontDataset('/home/tony/work/font_transform/new_data/data/', train=True)
