@@ -252,8 +252,10 @@ class FontDataset(Dataset):
     def __getitem__(self, idx):
         if self.train:
             sample = self.train_data[idx].copy()
-            im = np.asarray(Image.open(sample['image_path']))
-            base_im = np.asarray(Image.open(sample['base_image_path']))
+            pil_im = Image.open(sample['image_path'])
+            pil_base_im = Image.open(sample['base_image_path'])
+            im = np.asarray(pil_im)
+            base_im = np.asarray(pil_base_im)
             sample['data'] = np.reshape(im[..., 3], (-1,)).astype(np.float32)
             sample['base_data'] = np.reshape(base_im[..., 3], (-1,)).astype(np.float32)
             if np.random.random() > 0.5:
@@ -263,20 +265,22 @@ class FontDataset(Dataset):
                 sample['data'] = np.clip(sample['data'], 0, 255)
             sample.pop('image_path')
             sample.pop('base_image_path')
-            im.close()
-            base_im.close()
+            pil_im.close()
+            pil_base_im.close()
             # print(sample)
             return sample
         else:
             sample = self.test_data[idx].copy()
-            im = np.asarray(Image.open(sample['image_path']))
-            base_im = np.asarray(Image.open(sample['base_image_path']))
+            pil_im = Image.open(sample['image_path'])
+            pil_base_im = Image.open(sample['base_image_path'])
+            im = np.asarray(pil_im)
+            base_im = np.asarray(pil_base_im)
             sample['data'] = np.reshape(im[..., 3], (-1,)).astype(np.float32)
             sample['base_data'] = np.reshape(base_im[..., 3], (-1,)).astype(np.float32)
             sample.pop('image_path')
             sample.pop('base_image_path')
-            im.close()
-            base_im.close()
+            pil_im.close()
+            pil_base_im.close()
             return sample
 
 
